@@ -1,0 +1,6 @@
+__tests__/
+coverage/
+examples/
+images/
+rollup.config.js
+yarn.lock
