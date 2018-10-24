@@ -10,7 +10,6 @@ export default {
     format: 'umd',
     name: 'hyperappInfiniteList',
     sourcemap: true,
-    sourcemapFile: './dist/h/yperapp-infinite-list.js.map',
     globals: {
       hyperapp: 'hyperapp'
     }
