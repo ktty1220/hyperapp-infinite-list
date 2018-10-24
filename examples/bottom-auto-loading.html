@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hyperapp InfiniteList auto loading example</title>
+    <link rel="stylesheet" href="assets/prism.css">
+    <link rel="stylesheet" href="assets/common.css">
+  </head>
+  <body>
+    <section id="list"></section>
+
+    <section id="tutorial">
+      <h1>How to Implementation</h1>
+
+      <div class="step">
+        <p>This example is based on the list introduced in the <a href="basic.html">basic example</a>.</p>
+        <p>If you have not seen the basic example yet, please look over it first.</p>
+      </div>
+
+      <div class="step">
+        <h2>Step 1</h2>
+        <p>Add <a href="https://github.com/ktty1220/hyperapp-infinite-list#custom-state" target="_blank">custom state</a> for auto loading.</p>
+        <pre><code class="language-js">
+const state = {
+  $list1: createState({
+<mark>    loading: false,  // show or hide loading message&nbsp;
+    lastId: 0        // last loaded item id</mark>
+  })
+};
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 2</h2>
+        <p>Add <a href="https://github.com/ktty1220/hyperapp-infinite-list#custom-actions" target="_blank">custom actions</a> for auto loading.</p>
+        <pre><code class="language-js">
+const actions = {
+  $list1: createActions({
+<mark>    loadNextItems: (element) =&gt; (state, actions) =&gt; {
+      if (state.loading) return;
+
+      // show loading message
+      actions.startLoading();
+
+      setTimeout(() =&gt; {
+        // get current state
+        const items = state.items;
+        let nextId = state.lastId;
+
+        // add 10 dummy items
+        for (let i = 0; i &lt; 10; i++) {
+          nextId++;
+          items.push({ id: nextId, name: `foo ${nextId}` });&nbsp;
+        }
+
+        // update state
+        actions.setItems(items);
+        actions.setLastId(nextId);
+
+        // hide loading message
+        actions.endLoading();
+      }, 1000)
+    },
+    setLastId: (lastId) =&gt; ({ lastId }),
+    startLoading: () =&gt; ({ loading: true }),
+    endLoading: () =&gt; ({ loading: false })</mark>
+  })
+};
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 3</h2>
+        <p>Create loading message component.</p>
+        <pre><code class="language-js">
+const Loading = () =&gt; (state) =&gt; {
+  if (! state.$list1.loading) return null;
+  return (
+    &lt;div style={{
+      position: 'absolute',
+      left: '0',
+      bottom: '0',
+      width: '100%',
+      padding: '5px',
+      textAlign: 'center',
+      fontWeight: 'bold',
+      color: '#fff',
+      background: 'rgba(0, 0, 0, .7)'
+    }}&gt;loading ...&lt;/div&gt;
+  );
+};
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 4</h2>
+        <p>Add the loading component to the view.</p>
+        <pre><code class="language-js">
+const view = (state, actions) =&gt; (
+  &lt;div&gt;
+    &lt;h1&gt;Hyperapp InfiniteList auto loading example&lt;/h1&gt;
+    &lt;div style={{
+      height: '480px',
+      border: 'solid 1px #222',
+      <mark>position: 'relative'</mark>
+    }}&gt;
+      &lt;List
+        namespace="$list1"
+        itemHeight={80}
+        <mark>onReachBottom={actions.$list1.loadNextItems}</mark>
+      /&gt;
+      <mark>&lt;Loading /&gt;</mark>
+    &lt;/div&gt;
+  &lt;/div&gt;
+);
+        </code></pre>
+        <p class="notice">Set position of the parent element to <strong>relative</strong> because the loading component position is <strong>absolute</strong>.</p>
+        <p class="notice">Set <strong>onReachBottom</strong> event action of the infinite list.</p>
+        <p class="notice">Place the loading component as a sibling element of the infinite list.</p>
+      </div>
+
+      <div class="step">
+        <h2>Step 5</h2>
+        <p>Set <strong>lastId</strong> of custom state at initialization.</p>
+        <pre><code class="language-js">
+const main = app(state, actions, view, document.getElementById('list'));
+const items = [];
+for (let i = 1; i &lt;= 1000; i++) {
+  items.push({ id: i, name: `foo ${i}` });
+}
+main.$list1.setItems(items);
+<mark>main.$list1.setLastId(1000);</mark>
+        </code></pre>
+      </div>
+
+      <hr>
+
+      <h1>Enhancement: When new items are added, scroll the infinite list a little.</h1>
+
+      <div class="step">
+        <h2>Step 1</h2>
+        <p>Add <a href="https://github.com/Stanko/animated-scroll-to" target="_blank">animate scrolling library</a>.</p>
+        <pre><code class="language-js">
+&lt;script src="https://unpkg.com/animated-scroll-to/animated-scroll-to.js"&gt;&lt;/script&gt;
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 2</h2>
+        <p>Add a data-id attribute to each item element so that it can detect rendering of the item.</p>
+        <pre><code class="language-js">
+const List = createList(
+  ({ id, name }) =&gt; (
+    &lt;div key={id} <mark>data-id={id}</mark> style={{
+      width: '100%',
+      padding: '10px',
+      textAlign: 'center',
+      borderTop: (id === 1) ? 'none' : 'solid 1px #222'
+    }}&gt;
+      &lt;div&gt;id: {id}&lt;/div&gt;
+      &lt;div&gt;name: {name}&lt;/div&gt;
+    &lt;/div&gt;
+  )
+);
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 3</h2>
+        <p>Add scroll processing on adding items to <strong>loadNextItems</strong> action.</p>
+        <pre><code class="language-js">
+loadNextItems: (element) =&gt; (state, actions) =&gt; {
+  // show loading message
+  actions.startLoading();
+
+  setTimeout(() =&gt; {
+    // get current state
+    const items = state.items;
+    let nextId = state.lastId;
+
+    // add 10 dummy items
+    for (let i = 0; i &lt; 20; i++) {
+      nextId++;
+      items.push({ id: nextId, name: `foo ${nextId}` });
+    }
+
+    // update state
+    actions.setItems(items);
+    actions.setLastId(nextId);
+
+    // hide loading message
+    actions.endLoading();
+
+<mark>    // wait for a new item to be rendered
+    const nextFirstId = state.lastId + 1;
+    let loopLimit = 10;
+    const timer = setInterval(() =&gt; {
+      if (document.querySelector(`[data-id="${nextFirstId}"]`)) {&nbsp;
+        // a new item was found on the list
+        animateScrollTo(element.scrollTop + 50, { element });
+        clearInterval(timer);
+      } else {
+        // no new items found on the list yet
+        loopLimit--;
+        if (loopLimit &lt;= 0) clearInterval(timer);
+      }
+    }, 100);</mark>
+  }, 1000)
+},
+        </code></pre>
+      </div>
+
+      <hr>
+      <footer>
+        <h1>Other examples</h1>
+        <ul>
+          <li><a href="basic.html">Basic</a></li>
+          <li><a href="with-animation.html">With animation</a></li>
+        </ul>
+      </footer>
+    </section>
+
+    <script src="assets/common.js"></script>
+    <script src="assets/prism.js"></script>
+    <script src="assets/babel-standalone.min.js"></script>
+    <script src="assets/hyperapp.js"></script>
+    <script src="assets/hyperapp-infinite-list.js"></script>
+    <script src="https://unpkg.com/animated-scroll-to/animated-scroll-to.js"></script>
+    <script type="text/babel">
+      /*@jsx h*/
+      const { h, app } = hyperapp;
+      const { createState, createActions, createList } = hyperappInfiniteList;
+
+      const state = {
+        $list1: createState({
+          loading: false,  // show or hide loading message&nbsp;
+          lastId: 0        // last loaded item id</mark>
+        })
+      };
+
+      const actions = {
+        $list1: createActions({
+          loadNextItems: (element) => (state, actions) => {
+            if (state.loading) return;
+
+            // show loading message
+            actions.startLoading();
+
+            setTimeout(() => {
+              // get current state
+              const items = state.items;
+              let nextId = state.lastId;
+
+              // add 10 dummy items
+              for (let i = 0; i < 20; i++) {
+                nextId++;
+                items.push({ id: nextId, name: `foo ${nextId}` });
+              }
+
+              // update state
+              actions.setItems(items);
+              actions.setLastId(nextId);
+
+              // hide loading message
+              actions.endLoading();
+
+              // wait for a new item to be rendered
+              const nextFirstId = state.lastId + 1;
+              let loopLimit = 10;
+              const timer = setInterval(() => {
+                if (document.querySelector(`[data-id="${nextFirstId}"]`)) {
+                  // a new item was found on the list
+                  animateScrollTo(element.scrollTop + 50, { element });
+                  clearInterval(timer);
+                } else {
+                  // no new items found on the list yet
+                  loopLimit--;
+                  if (loopLimit <= 0) clearInterval(timer);
+                }
+              }, 100);
+            }, 1000)
+          },
+          setLastId: (lastId) => ({ lastId }),
+          startLoading: () => ({ loading: true }),
+          endLoading: () => ({ loading: false })
+        })
+      };
+
+      const List = createList(
+        ({ id, name }) => (
+          <div key={id} data-id={id} style={{
+            width: '100%',
+            padding: '10px',
+            textAlign: 'center',
+            borderTop: (id === 1) ? 'none' : 'solid 1px #222'
+          }}>
+            <div>id: {id}</div>
+            <div>name: {name}</div>
+          </div>
+        )
+      );
+
+      const Loading = () => (state) => {
+        if (! state.$list1.loading) return null;
+        return (
+          <div style={{
+            position: 'absolute',
+            left: '0',
+            bottom: '0',
+            width: '100%',
+            padding: '5px',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            color: '#fff',
+            background: 'rgba(0, 0, 0, .7)'
+          }}>loading ...</div>
+        );
+      };
+
+      const view = (state, actions) => (
+        <div>
+          <h1>Hyperapp InfiniteList auto loading example</h1>
+          <div style={{
+            height: '480px',
+            border: 'solid 1px #222',
+            position: 'relative'
+          }}>
+            <List
+              namespace="$list1"
+              itemHeight={80}
+              onReachBottom={actions.$list1.loadNextItems}
+            />
+            <Loading />
+          </div>
+          <small>Scrolling to the bottom will automatically load more items.</small>
+        </div>
+      );
+
+      const main = app(state, actions, view, document.getElementById('list'));
+      const items = [];
+      for (let i = 1; i <= 1000; i++) {
+        items.push({ id: i, name: `foo ${i}` });
+      }
+      main.$list1.setItems(items);
+      main.$list1.setLastId(1000);
+    </script>
+  </body>
+</html>

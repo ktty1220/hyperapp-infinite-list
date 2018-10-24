@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hyperapp InfiniteList animation example</title>
+    <link rel="stylesheet" href="assets/prism.css">
+    <link rel="stylesheet" href="assets/common.css">
+  </head>
+  <body>
+    <section id="list"></section>
+
+    <section id="tutorial">
+      <h1>How to Implementation</h1>
+
+      <div class="step">
+        <p>This example is based on the list introduced in the <a href="basic.html">basic example</a>.</p>
+        <p>If you have not seen the basic example yet, please look over it first.</p>
+      </div>
+
+      <div class="step">
+        <h2>Step 1</h2>
+        <p>Add <a href="https://github.com/ktty1220/hyperapp-infinite-list#custom-state" target="_blank">custom state</a> for adding or removing item.</p>
+        <pre><code class="language-js">
+const state = {
+  $list1: createState({
+    <mark>lastId: 0  // last loaded item id</mark>
+  })
+};
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 2</h2>
+        <p>Add <a href="https://github.com/ktty1220/hyperapp-infinite-list#custom-actions" target="_blank">custom actions</a> for adding or removing item.</p>
+        <pre><code class="language-js">
+const actions = {
+  $list1: createActions({
+<mark>    addItem: () =&gt; (state, actions) =&gt; {
+      const items = state.items;
+      const nextId = state.lastId + 1;
+      items.unshift({ id: nextId, name: `foo ${nextId}` });
+      actions.setLastId(nextId);
+      return { items };
+    },
+    removeItem: (id) =&gt; (state, actions) =&gt; {
+      return {
+        items: state.items.filter((item) =&gt; item.id !== id)&nbsp;
+      };
+    },
+    setLastId: (lastId) =&gt; ({ lastId })</mark>
+  })
+};
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 3</h2>
+        <p>Create close button component.</p>
+        <pre><code class="language-js">
+const CloseButton = (<mark>{ id }</mark>) =&gt; <mark>(state, actions) =&gt;</mark> (
+  &lt;a href="javascript:void(0)"
+    style={{
+      background: '#f88',
+      border: 'solid 1px #f00',
+      color: '#fff',
+      textDecoration: 'none',
+      fontSize: '1em',
+      fontWeight: 'bold',
+      width: '1.5em',
+      height: '1.5em',
+      lineHeight: '1.5em',
+      textAlign: 'center',
+      position: 'absolute',
+      top: '10px',
+      right: '10px'
+    }}
+    innerHTML="&#x2718;"
+<mark>    onclick={(ev) =&gt; {
+      // parent = item element
+      const itemElement = ev.currentTarget.parentNode;
+      itemElement.addEventListener('transitionend', () =&gt; {&nbsp;
+        // remove item element when the item becomes completely transparent.
+        actions.$list1.removeItem(id);
+      });
+      itemElement.style.opacity = '0';
+    }}</mark>
+  &gt;&lt;/a&gt;
+);
+        </code></pre>
+        <p class="notice">Receive <strong>id</strong> prop from parent component.</p>
+        <p class="notice">Create the close button component as <a href="https://github.com/jorgebucaran/hyperapp#lazy-components" target="_blank">Lazy component</a> to perform actions within the component.</p>
+        <p class="notice">In the onclick handler of close button component, the item element will be transparent with animation, and the item element will removed when the item becomes completely transparent.</a>
+      </div>
+
+      <div class="step">
+        <h2>Step 4</h2>
+        <p>Add the close button component to the item component.</p>
+        <pre><code class="language-js">
+const List = createList(
+  ({ id, name }) =&gt; (
+    &lt;div key={id} style={{
+      width: '100%',
+      padding: '10px',
+      textAlign: 'center',
+      borderBottom: (id === 1) ? 'none' : 'solid 1px #222',
+<mark>      opacity: '1',
+      transition: 'opacity 300ms, transform 300ms, top 200ms'&nbsp;</mark>
+    }}
+<mark>    oncreate={(element) =&gt; {
+      element.style.transform = 'translateX(-100%)';
+      setTimeout(() =&gt; {
+        element.style.transform = 'translateX(0)';
+      }, 200);
+    }}</mark>
+    &gt;
+      <mark>&lt;CloseButton id={id} /&gt;</mark>
+      &lt;div&gt;id: {id}&lt;/div&gt;
+      &lt;div&gt;name: {name}&lt;/div&gt;
+    &lt;/div&gt;
+  )
+);
+        </code></pre>
+        <p class="notice">Add transition setting to items style.</p>
+        <p class="notice">Change transform in the <strong>onCreate</strong> event handler (slide in from the left).</p>
+        <p class="notice">Place the close button component as a child element of the item element, and set <strong>id</strong> prop.</p>
+      </div>
+
+      <div class="step">
+        <h2>Step 5</h2>
+        <p>Set <strong>lastId</strong> of custom state at initialization.</p>
+        <pre><code class="language-js">
+const main = app(state, actions, view, document.getElementById('list'));
+const items = [];
+for (let i = 1; i &lt;= 1000; i++) {
+  items.unshift({ id: i, name: `foo ${i}` });
+}
+main.$list1.setItems(items);
+<mark>main.$list1.setLastId(1000);</mark>
+        </code></pre>
+      </div>
+
+      <hr>
+      <footer>
+        <h1>Other examples</h1>
+        <ul>
+          <li><a href="basic.html">Basic</a></li>
+          <li><a href="bottom-auto-loading.html">Auto loading when reaching the bottom of the list</a></li>
+        </ul>
+      </footer>
+    </section>
+
+    <script src="assets/common.js"></script>
+    <script src="assets/prism.js"></script>
+    <script src="assets/babel-standalone.min.js"></script>
+    <script src="assets/hyperapp.js"></script>
+    <script src="assets/hyperapp-infinite-list.js"></script>
+    <script type="text/babel">
+      /*@jsx h*/
+      const { h, app } = hyperapp;
+      const { createState, createActions, createList } = hyperappInfiniteList;
+
+      const state = {
+        $list1: createState({
+          lastId: 0  // last loaded item id
+        })
+      };
+
+      const actions = {
+        $list1: createActions({
+          addItem: () => (state, actions) => {
+            const items = state.items;
+            const nextId = state.lastId + 1;
+            items.unshift({ id: nextId, name: `foo ${nextId}` });
+            actions.setLastId(nextId);
+            return { items };
+          },
+          removeItem: (id) => (state, actions) => {
+            return {
+              items: state.items.filter((item) => item.id !== id)
+            };
+          },
+          setLastId: (lastId) => ({ lastId })
+        })
+      };
+
+      const CloseButton = ({ id }) => (state, actions) => (
+        <a href="javascript:void(0)"
+          style={{
+            background: '#f88',
+            border: 'solid 1px #f00',
+            color: '#fff',
+            textDecoration: 'none',
+            fontSize: '1em',
+            fontWeight: 'bold',
+            width: '1.5em',
+            height: '1.5em',
+            lineHeight: '1.5em',
+            textAlign: 'center',
+            position: 'absolute',
+            top: '10px',
+            right: '10px'
+          }}
+          innerHTML="&#x2718;"
+          onclick={(ev) => {
+            // parent = item element
+            const itemElement = ev.currentTarget.parentNode;
+            itemElement.addEventListener('transitionend', () => {
+              // remove item element when the item becomes completely transparent.
+              actions.$list1.removeItem(id);
+            });
+            itemElement.style.opacity = '0';
+          }}
+        ></a>
+      );
+
+      const List = createList(
+        ({ id, name }) => (
+          <div key={id} style={{
+            width: '100%',
+            padding: '10px',
+            textAlign: 'center',
+            borderBottom: (id === 1) ? 'none' : 'solid 1px #222',
+            opacity: '1',
+            transition: 'opacity 300ms, transform 300ms, top 200ms'
+          }}
+          oncreate={(element) => {
+            element.style.transform = 'translateX(-100%)';
+            setTimeout(() => {
+              element.style.transform = 'translateX(0)';
+            }, 200);
+          }}
+          >
+            <CloseButton id={id} />
+            <div>id: {id}</div>
+            <div>name: {name}</div>
+          </div>
+        )
+      );
+
+      const view = (state, actions) => (
+        <div>
+          <h1>Hyperapp InfiniteList animation example</h1>
+          <button onclick={() => actions.$list1.addItem()}>add</button>
+          <div style={{
+            height: '480px',
+            border: 'solid 1px #222'
+          }}>
+            <List namespace="$list1" itemHeight={80} />
+          </div>
+        </div>
+      );
+
+      const main = app(state, actions, view, document.getElementById('list'));
+      const items = [];
+      for (let i = 1; i <= 1000; i++) {
+        items.unshift({ id: i, name: `foo ${i}` });
+      }
+      main.$list1.setItems(items);
+      main.$list1.setLastId(1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hyperapp InfiniteList basic example</title>
+    <link rel="stylesheet" href="assets/prism.css">
+    <link rel="stylesheet" href="assets/common.css">
+  </head>
+  <body>
+    <section id="list"></section>
+
+    <section id="tutorial">
+      <h1>How to Implementation</h1>
+
+      <div class="step"></div>
+
+      <div class="step">
+        <h2>Step 1</h2>
+        <p>Import hyperapp-infinite-list.</p>
+
+        <h3>Node.js</h3>
+        <pre><code class="language-js">
+import { createState, createActions, createList } from 'hyperapp-infinite-list';
+        </code></pre>
+
+        <h3>Browser</h3>
+        <p>Add script tag on html.</p>
+        <pre><code class="language-html">
+&lt;script src="/path/to/hyperapp-infinite-list.js"&gt;&lt;/script&gt;
+        </code></pre>
+        <p>You can find the library in <strong>window.hyperappInfiniteList</strong>.</p>
+        <pre><code class="language-js">
+const { createState, createActions, createList } = hyperappInfiniteList;
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 2</h2>
+        <p>Add the state and action for hyperapp-infinite-list.</p>
+        <pre><code class="language-js">
+const state = {
+  <mark>$list1</mark>: createState()
+};
+
+const actions = {
+  <mark>$list1</mark>: createActions()
+};
+        </code></pre>
+        <p class="notice"><a href="https://github.com/jorgebucaran/hyperapp#nested-actions" target="_blank">Namespace</a> in state and actions must be same name.</p>
+      </div>
+
+      <div class="step">
+        <h2>Step 3</h2>
+        <p>Create inifinite list component.</p>
+        <pre><code class="language-js">
+const List = createList(
+  ({ id, name }) =&gt; (
+    &lt;div <mark>key={id}</mark> style={{
+      width: '100%',
+      padding: '10px',
+      textAlign: 'center',
+      borderTop: (id === 1) ? 'none' : 'solid 1px #222'
+    }}&gt;
+      &lt;div&gt;id: {id}&lt;/div&gt;
+      &lt;div&gt;name: {name}&lt;/div&gt;
+    &lt;/div&gt;
+  )
+);
+        </code></pre>
+
+        <p>Argument of <strong>createList</strong> is <a href="https://github.com/jorgebucaran/hyperapp#components" target="_blank">Hyperapp component</a>.</p>
+        <p>The component specified here will be rendered as each item of the infinite list.</p>
+        <p class="notice">For each item you need to set the (unique) <a href="https://github.com/jorgebucaran/hyperapp#keys" target="_blank">key prop</a>.</p>
+
+        <hr>
+        <p><a href="https://github.com/jorgebucaran/hyperapp#lazy-components" target="_blank">Lazy components</a> can also be used here.</p>
+        <pre><code class="language-js">
+const List = createList(
+  ({ id, name }) =&gt; <mark>(state, actions) =&gt;</mark> (
+     .
+     .
+     .
+  )
+);
+        </code></pre>
+      </div>
+
+      <div class="step">
+        <h2>Step 4</h2>
+        <p>Add the infinite list component created in <strong>step 3</strong> to the view.</p>
+        <pre><code class="language-js">
+const view = (state, actions) =&gt; (
+  &lt;div&gt;
+    &lt;h1&gt;Hyperapp InfiniteList basic example&lt;/h1&gt;
+    &lt;div style={{
+      <mark>height: '480px'</mark>,
+      border: 'solid 1px #222'
+    }}&gt;
+      &lt;List <mark>namespace="$list1"</mark> <mark>itemHeight={80}</mark> /&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+);
+        </code></pre>
+        <p class="notice">The infinite list must be wrapped with a parent element that explicitly specifies a height.</p>
+        <p class="notice">The following props are required for the infinite list.</p>
+        <ul>
+          <li><strong>namespace</strong>: Specify the namespace stored by <strong>createState</strong> and <strong>createActions</strong> in <strong>step 2</strong>.</li>
+          <li><strong>itemHeight</strong>: Specify the height of each item to be rendered (px).</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h2>Step 5</h2>
+        <p>Set items to the inifinite list component.</p>
+        <pre><code class="language-js">
+const main = app(state, actions, view, document.getElementById('list'));
+const items = [];
+for (let i = 1; i &lt;= 1000; i++) {
+  items.push({ id: i, name: `foo ${i}` });
+}
+<mark>main.$list1.setItems(items);</mark>
+        </code></pre>
+        <p>Call <strong>setItems</strong> action of the infinite list namespace with an array of items.</p>
+
+        <hr>
+        <p>There is also a way to set items in the <strong>onCreated</strong> event of the infinite list.</p>
+        <pre><code class="language-js">
+const view = (state, actions) =&gt; (
+  &lt;div&gt;
+    &lt;h1&gt;Hyperapp InfiniteList basic example&lt;/h1&gt;
+    &lt;div style={{
+      height: '480px',
+      border: 'solid 1px #222'
+    }}&gt;
+      &lt;List
+        namespace="$list1"
+        itemHeight={80}
+<mark>        onCreated={() =&gt; {
+          const items = [];
+          for (let i = 1; i &lt;= 1000; i++) {
+            items.push({ id: i, name: `foo ${i}` });&nbsp;
+          }
+          actions.$list1.setItems(items);
+        }}</mark>
+      /&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+);
+app(state, actions, view, document.getElementById('list'));
+        </code></pre>
+      </div>
+
+      <hr>
+      <footer>
+        <h1>Other examples</h1>
+        <ul>
+          <li><a href="bottom-auto-loading.html">Auto loading when reaching the bottom of the list</a></li>
+          <li><a href="with-animation.html">With animation</a></li>
+        </ul>
+      </footer>
+    </section>
+
+    <script src="assets/common.js"></script>
+    <script src="assets/prism.js"></script>
+    <script src="assets/babel-standalone.min.js"></script>
+    <script src="assets/hyperapp.js"></script>
+    <script src="assets/hyperapp-infinite-list.js"></script>
+    <script type="text/babel">
+      /*@jsx h*/
+      const { h, app } = hyperapp;
+      const { createState, createActions, createList } = hyperappInfiniteList;
+
+      const state = {
+        $list1: createState()
+      };
+
+      const actions = {
+        $list1: createActions()
+      };
+
+      const List = createList(
+        ({ id, name }) => (
+          <div key={id} style={{
+            width: '100%',
+            padding: '10px',
+            textAlign: 'center',
+            borderTop: (id === 1) ? 'none' : 'solid 1px #222'
+          }}>
+            <div>id: {id}</div>
+            <div>name: {name}</div>
+          </div>
+        )
+      );
+
+      const view = (state, actions) => (
+        <div>
+          <h1>Hyperapp InfiniteList basic example</h1>
+          <div style={{
+            height: '480px',
+            border: 'solid 1px #222'
+          }}>
+            <List namespace="$list1" itemHeight={80} />
+          </div>
+        </div>
+      );
+
+      const main = app(state, actions, view, document.getElementById('list'));
+      const items = [];
+      for (let i = 1; i <= 1000; i++) {
+        items.push({ id: i, name: `foo ${i}` });
+      }
+      main.$list1.setItems(items);
+    </script>
+  </body>
+</html>
