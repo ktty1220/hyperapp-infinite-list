@@ -1,7 +1,7 @@
 {
   "name": "hyperapp-infinite-list",
   "description": "Infinite scroll list component for Hyperapp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "dist/hyperapp-infinite-list.js",
   "module": "src/index.js",
   "license": "MIT",
@@ -100,7 +100,7 @@
     ]
   },
   "repository": "ktty1220/hyperapp-infinite-list",
-  "homepage": "https://ktty1220.github.io/hyperapp-infinite-list",
+  "homepage": "https://github.com/ktty1220/hyperapp-infinite-list",
   "keywords": [
     "hyperapp",
     "infinite"
