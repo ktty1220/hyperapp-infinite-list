@@ -1,10 +1,9 @@
 import buble from 'rollup-plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
 import { uglify } from 'rollup-plugin-uglify';
 
 export default {
-  input: './src/index.jsx',
+  input: './src/index.js',
   output: {
     file: './dist/hyperapp-infinite-list.js',
     format: 'umd',
@@ -16,11 +15,7 @@ export default {
   },
   plugins: [
     resolve(),
-    commonjs(),
-    buble({
-      jsx: 'h',
-      objectAssign: 'Object.assign'
-    }),
+    buble({ jsx: 'h' }),
     uglify()
   ],
   watch: {
