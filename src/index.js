@@ -29,14 +29,24 @@ export function createActions(customActions = {}) {
 
     // internal function (don't call directly)
     _setContainerElement: (_$el) => ({ _$el }),
-    _calcPosition: ({ preloadItemCount, itemHeight }) => (state) => {
-      const _position = Math.max(
-        0,
-        Math.floor(state._$el.scrollTop / itemHeight) - preloadItemCount
-      );
-      if (state._position !== _position) {
-        return { _position };
+    _calcPosition: ({ preloadItemCount, itemHeight, customHeightPropName, items }) => (state) => {
+      const scrollTop = state._$el.scrollTop;
+      let realPosition = 0;
+      if (!customHeightPropName) {
+        realPosition = Math.floor(scrollTop / itemHeight);
+      } else {
+        let totalHeight = 0;
+        items.some((item, i) => {
+          totalHeight += customHeightPropName in item ? item[customHeightPropName] : itemHeight;
+          if (totalHeight > scrollTop) {
+            realPosition = i;
+            return true;
+          }
+        });
       }
+      const _position = Math.max(0, realPosition - preloadItemCount);
+      if (state._position === _position) return;
+      return { _position };
     }
   };
   Object.keys(customActions).forEach((key) => {
@@ -55,6 +65,7 @@ export function createList(ItemView) {
       namespace, // required
       itemHeight, // required
       preloadItemCount = 10,
+      customHeightPropName = null,
       onReachTop = () => {},
       onReachBottom = () => {},
       onCreate = () => {},
@@ -85,13 +96,49 @@ export function createList(ItemView) {
 
     const S = state[namespace];
     const A = actions[namespace];
-    const listHeight = itemHeight * S.items.length;
-    const drawTo = S._$el
-      ? Math.min(
-          S.items.length,
-          S._position + Math.ceil(S._$el.offsetHeight / itemHeight) + preloadItemCount * 2
-        )
-      : 0;
+
+    const drawTo = (() => {
+      if (!S._$el) return 0;
+      const listOffsetHeight = S._$el.offsetHeight;
+      let tmpPosition = S.items.length;
+      if (!customHeightPropName) {
+        tmpPosition = S._position + Math.ceil(listOffsetHeight / itemHeight) + preloadItemCount * 2;
+      } else {
+        let displayAreaHeight = 0;
+        for (let i = S._position + preloadItemCount; i < S.items.length; i++) {
+          const item = S.items[i];
+          displayAreaHeight +=
+            customHeightPropName in item ? item[customHeightPropName] : itemHeight;
+          if (displayAreaHeight > listOffsetHeight) {
+            tmpPosition = i + preloadItemCount;
+            break;
+          }
+        }
+      }
+      return Math.min(S.items.length, tmpPosition);
+    })();
+
+    let drawFromMargin = 0;
+    const listHeight = (() => {
+      if (!customHeightPropName) {
+        return itemHeight * S.items.length;
+      }
+      return S.items.reduce((prev, cur, idx) => {
+        if (!(customHeightPropName in cur)) {
+          if (idx < S._position) {
+            drawFromMargin += itemHeight;
+          }
+          return prev + itemHeight;
+        }
+        if (!/^\d+(\.\d+)?$/.test(String(cur[customHeightPropName]))) {
+          throw new Error(`${customHeightPropName} must be numeric`, cur);
+        }
+        if (idx < S._position) {
+          drawFromMargin += cur[customHeightPropName];
+        }
+        return prev + cur[customHeightPropName];
+      }, 0);
+    })();
 
     const containerView = (
       <div
@@ -108,7 +155,12 @@ export function createList(ItemView) {
           const scrollTop = S._$el.scrollTop;
           if (scrollTop === 0) onReachTop(S._$el);
           if (scrollTop >= listHeight - S._$el.offsetHeight - 1) onReachBottom(S._$el);
-          A._calcPosition({ preloadItemCount, itemHeight });
+          A._calcPosition({
+            preloadItemCount,
+            itemHeight,
+            customHeightPropName,
+            items: S.items
+          });
         }}>
         <div
           style={{
@@ -124,11 +176,21 @@ export function createList(ItemView) {
             if (itemView.key == null && noKeyWarn == null) {
               noKeyWarn = true;
             }
+
             const itemStyle = {
-              height: `${itemHeight}px`,
               position: 'absolute',
               top: `${p * itemHeight}px`
             };
+            let itemStyleHeight = itemHeight;
+            if (customHeightPropName) {
+              if (customHeightPropName in item) {
+                itemStyleHeight = item[customHeightPropName];
+              }
+              itemStyle.top = `${drawFromMargin}px`;
+              drawFromMargin += itemStyleHeight;
+            }
+            itemStyle.height = `${itemStyleHeight}px`;
+
             itemView.attributes.style = itemView.attributes.style || {};
             Object.keys(itemStyle).forEach((key) => {
               itemView.attributes.style[key] = itemStyle[key];
