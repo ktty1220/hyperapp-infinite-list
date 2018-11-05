@@ -140,6 +140,18 @@ export function createList(ItemView) {
       }, 0);
     })();
 
+    const redraw = () => {
+      const scrollTop = S._$el.scrollTop;
+      if (scrollTop === 0) onReachTop(S._$el);
+      if (scrollTop >= listHeight - S._$el.offsetHeight - 1) onReachBottom(S._$el);
+      A._calcPosition({
+        preloadItemCount,
+        itemHeight,
+        customHeightPropName,
+        items: S.items
+      });
+    };
+
     const containerView = (
       <div
         style={{
@@ -150,18 +162,11 @@ export function createList(ItemView) {
           A._setContainerElement(el);
           onCreate(el);
         }}
-        onupdate={() => onUpdate(S._$el)}
-        onscroll={() => {
-          const scrollTop = S._$el.scrollTop;
-          if (scrollTop === 0) onReachTop(S._$el);
-          if (scrollTop >= listHeight - S._$el.offsetHeight - 1) onReachBottom(S._$el);
-          A._calcPosition({
-            preloadItemCount,
-            itemHeight,
-            customHeightPropName,
-            items: S.items
-          });
-        }}>
+        onupdate={() => {
+          redraw();
+          onUpdate(S._$el);
+        }}
+        onscroll={redraw}>
         <div
           style={{
             position: 'relative',
