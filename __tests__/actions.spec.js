@@ -60,7 +60,14 @@ describe('setItems', () => {
 });
 
 describe('_setContainerElement', () => {
-  // no test
+  const { _setContainerElement } = createActions();
+  test('set', () => {
+    const expected = {
+      offsetHeight: 1000
+    };
+    const actual = _setContainerElement(expected);
+    expect(actual._$el).toEqual(expected);
+  });
 });
 
 describe('_calcPosition', () => {
@@ -68,16 +75,58 @@ describe('_calcPosition', () => {
 
   // prettier-ignore
   [
-    [0, 5, 100, 0],
-    [500, 5, 90, 0],
-    [1200, 10, 45, 16]
+    [0, 5, 100, 0, 0],
+    [500, 5, 90, 0, 0],
+    [1200, 10, 45, 16, 1],
+    [18315, 4, 130, 136, 105]
   ].forEach(
-    ([scrollTop, preloadItemCount, itemHeight, expected]) => {
-      test(`${scrollTop}, ${preloadItemCount}, ${itemHeight} => ${expected}`, () => {
-        const state = { _$el: { scrollTop } };
-        const actual = _calcPosition({ preloadItemCount, itemHeight })(state);
+    ([scrollTop, preloadItemCount, itemHeight, expected, expectedCustom]) => {
+      const title = `${scrollTop}, ${preloadItemCount}, ${itemHeight} => ${expected}`;
+      test(title, () => {
+        const state = {
+          _$el: { scrollTop },
+          items: []
+        };
+        const actual = _calcPosition({
+          preloadItemCount,
+          itemHeight
+        })(state);
         expect(actual._position).toEqual(expected);
+      });
+
+      test(`${title} (customHeight)`, () => {
+        const state = {
+          _$el: { scrollTop },
+          items: [ ...Array(300).keys() ].map((n, i) => {
+            const item = {
+              id: i,
+              name: `foo ${i}`
+            };
+            if (i % 4 === 2) item._height = i;        // 2, 6, 10, 14, ...
+            if (i % 4 === 3) item._height = 300 + i;  // 3, 7, 11, 15, ...
+            return item;
+          })
+        };
+        const actual = _calcPosition({
+          preloadItemCount,
+          itemHeight,
+          customHeightPropName: '_height'
+        })(state);
+        expect(actual._position).toEqual(expectedCustom);
       });
     }
   );
+
+  test('_position not changed => skip update', () => {
+    const state = {
+      _$el: { scrollTop: 900 },
+      items: [],
+      _position: 6
+    };
+    const actual = _calcPosition({
+      preloadItemCount: 3,
+      itemHeight: 100
+    })(state);
+    expect(actual).toBeUndefined();
+  });
 });

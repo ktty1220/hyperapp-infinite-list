@@ -15,7 +15,6 @@ export default function createActions(customActions = {}) {
       const pic = props.preloadItemCount;
       const ih = props.itemHeight;
       const chpn = props.customHeightPropName;
-      const items = props.items;
 
       const scrollTop = state._$el.scrollTop;
       let realPosition = 0;
@@ -23,7 +22,7 @@ export default function createActions(customActions = {}) {
         realPosition = Math.floor(scrollTop / ih);
       } else {
         let totalHeight = 0;
-        items.some((item, i) => {
+        state.items.some((item, i) => {
           totalHeight += chpn in item ? item[chpn] : ih;
           if (totalHeight > scrollTop) {
             realPosition = i;

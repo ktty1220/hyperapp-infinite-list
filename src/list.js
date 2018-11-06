@@ -11,16 +11,12 @@ export default function createList(ItemView) {
     const A = actions[P.namespace];
     const L = getListState(S, P);
 
+    // TODO
     const redraw = () => {
       const scrollTop = S._$el.scrollTop;
       if (scrollTop === 0) P.onReachTop(S._$el);
       if (scrollTop >= L.height - S._$el.offsetHeight - 1) P.onReachBottom(S._$el);
-      A._calcPosition({
-        preloadItemCount: P.preloadItemCount,
-        itemHeight: P.itemHeight,
-        customHeightPropName: P.customHeightPropName,
-        items: S.items
-      });
+      A._calcPosition(P);
     };
 
     const containerView = (
@@ -58,9 +54,10 @@ export default function createList(ItemView) {
               top: `${pos * P.itemHeight}px`
             };
             let itemStyleHeight = P.itemHeight;
-            if (P.customHeightPropName) {
-              if (P.customHeightPropName in item) {
-                itemStyleHeight = item[P.customHeightPropName];
+            const chpn = P.customHeightPropName;
+            if (chpn) {
+              if (chpn in item) {
+                itemStyleHeight = item[chpn];
               }
               itemStyle.top = `${L.drawFromMargin}px`;
               L.drawFromMargin += itemStyleHeight;
