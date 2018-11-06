@@ -9,7 +9,7 @@ Infinite scroll list component for Hyperapp.
 
 ## Feature
 
-* Lightweight: The minified script size is 3kB.
+* Lightweight: The minified script size is 4kB.
 * Memory friendly: Render only the area where items are displayed.
 
 ## Limitation
