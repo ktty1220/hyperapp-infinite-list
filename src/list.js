@@ -2,6 +2,18 @@
 import { h } from 'hyperapp';
 import { validate, getListState } from './utils';
 
+const redraw = (props, state, actions, list) => {
+  const { onReachTop, onReachBottom } = props;
+  const { _$el } = state;
+  const { _calcPosition } = actions;
+  const { height } = list;
+
+  const scrollTop = _$el.scrollTop;
+  if (scrollTop === 0) onReachTop(_$el);
+  if (scrollTop >= height - _$el.offsetHeight - 1) onReachBottom(_$el);
+  _calcPosition(props);
+};
+
 export default function createList(ItemView) {
   let noKeyWarn = null;
 
@@ -10,14 +22,6 @@ export default function createList(ItemView) {
     const S = state[P.namespace];
     const A = actions[P.namespace];
     const L = getListState(S, P);
-
-    // TODO
-    const redraw = () => {
-      const scrollTop = S._$el.scrollTop;
-      if (scrollTop === 0) P.onReachTop(S._$el);
-      if (scrollTop >= L.height - S._$el.offsetHeight - 1) P.onReachBottom(S._$el);
-      A._calcPosition(P);
-    };
 
     const containerView = (
       <div
@@ -30,10 +34,10 @@ export default function createList(ItemView) {
           P.onCreate(el);
         }}
         onupdate={() => {
-          redraw();
+          redraw(P, S, A, L);
           P.onUpdate(S._$el);
         }}
-        onscroll={redraw}>
+        onscroll={() => redraw(P, S, A, L)}>
         <div
           style={{
             position: 'relative',
