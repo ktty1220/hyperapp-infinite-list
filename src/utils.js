@@ -89,7 +89,9 @@ export function getListState(state, props) {
             return prev + ih;
           }
           if (!/^\d+(\.\d+)?$/.test(String(cur[chpn]))) {
-            throw new Error(`${chpn} must be numeric`, cur);
+            const err = new Error(`${chpn} must be numeric`);
+            err.item = cur;
+            throw err;
           }
           if (idx < _position) {
             drawFromMargin += cur[chpn];

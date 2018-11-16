@@ -1,4 +1,3 @@
-/*eslint-env jest*/
 //import { createState, createActions, createList } from '../src';
 const createListMock = require('../src/list');
 const redraw = createListMock.__get__('redraw');

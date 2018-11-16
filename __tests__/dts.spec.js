@@ -1,4 +1,3 @@
-/*eslint-env jest*/
 import path from 'path';
 import * as ts from 'typescript';
 

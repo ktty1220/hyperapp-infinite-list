@@ -1,5 +1,3 @@
-/*eslint-env jest*/
-//eslint-disable-next-line no-unused-vars
 import { h } from 'hyperapp';
 import { renderToString } from '@hyperapp/render';
 import { createState, createActions, createList } from '../src';
