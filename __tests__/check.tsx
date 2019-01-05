@@ -1,10 +1,9 @@
-import { h, app, View, Component, ActionResult, ActionsType } from 'hyperapp';
+import { h, app, View, ActionResult, ActionsType } from 'hyperapp';
 import {
   InfiniteListState,
   createState,
   InfiniteListActions,
   createActions,
-  InfiniteListProps,
   createList
 } from '../';
 
@@ -68,23 +67,21 @@ const globalActions: ActionsType<State, Actions> = {
 };
 
 // view
-const List1: Component<InfiniteListProps> = createList<ListItem>(({ id, name }) => (
+const List1 = createList<ListItem>(({ id, name }) => (
   <div key={id}>
     <h2>{name}</h2>
   </div>
 ));
 
-const List2: Component<InfiniteListProps> = createList<ListItem, State, Actions>(
-  ({ id, name }) => (state, actions) => (
-    <div key={id} onclick={() => actions.$list2.selectItem(id)}>
-      <h2>{name}</h2>
-      <p>{state.message}</p>
-      <a href="#" onclick={() => actions.setMessage('hi')}>
-        click
-      </a>
-    </div>
-  )
-);
+const List2 = createList<ListItem, State, Actions>(({ id, name }) => (state, actions) => (
+  <div key={id} onclick={() => actions.$list2.selectItem(id)}>
+    <h2>{name}</h2>
+    <p>{state.message}</p>
+    <a href="#" onclick={() => actions.setMessage('hi')}>
+      click
+    </a>
+  </div>
+));
 
 const view: View<State, Actions> = (state, actions) => (
   <div>

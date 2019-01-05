@@ -33,6 +33,7 @@ export interface InfiniteListProps {
   onUpdate?(): void;
 }
 
+// @ISSUE https://github.com/jorgebucaran/hyperapp/issues/788
 export function createList<ListItem, State = {}, Actions = {}>(
   view: Component<ListItem, State, Actions>
-): Component<InfiniteListProps>;
+): any; //Component<InfiniteListProps>;
