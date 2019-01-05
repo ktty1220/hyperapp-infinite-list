@@ -27,6 +27,7 @@ export interface InfiniteListProps {
   namespace: string;
   itemHeight: number;
   preloadItemCount?: number;
+  customHeightPropName?: number;
   onReachTop?(): void;
   onReachBottom?(): void;
   onCreate?(): void;

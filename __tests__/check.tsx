@@ -11,6 +11,7 @@ import {
 interface ListItem {
   id: number;
   name: string;
+  $height?: number;
 }
 
 interface CustomState {
@@ -101,14 +102,14 @@ const view: View<State, Actions> = (state, actions) => (
         ]);
       }}
     />
-    <List2 namespace="$list2" itemHeight={50} preloadItemCount={5} />
+    <List2 namespace="$list2" itemHeight={50} preloadItemCount={5} customHeightPropName="$height" />
   </div>
 );
 
 // app
 const main = app(globalState, globalActions, view, null);
 main.$list2.setItems([
-  { id: 101, name: 'hoge' },
+  { id: 101, name: 'hoge', $height: 80 },
   { id: 102, name: 'fuga' },
-  { id: 103, name: 'piyo' }
+  { id: 103, name: 'piyo', $height: 30 }
 ]);
